@@ -6,8 +6,8 @@ import { z } from "zod";
 
 export const listarNotificacoes = assincrono(async (req, res) => {
   const limite = req.query.limite
-    ? z.coerce.number().int().positive().parse(req.query.limite)
-    : undefined;
+    ? z.coerce.number().int().positive().max(100).parse(req.query.limite)
+    : 50;
 
   const tipo = req.query.tipo
     ? z.string().min(1).parse(req.query.tipo)

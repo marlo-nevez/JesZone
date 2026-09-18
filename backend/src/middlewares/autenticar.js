@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import { tokenRevogado } from "./blocklistToken.js";
 import { ErroApi } from "../utils/ErroApi.js";
 
 /**
@@ -36,8 +37,15 @@ export function autenticar(req, res, next) {
             );
         }
 
+        if (tokenRevogado(payload.jti)) {
+            return next(
+                new ErroApi("Token inválido ou expirado.", 401)
+            );
+        }
+
         req.admin = {
-            email: payload.email
+            email: payload.email,
+            jti: payload.jti,
         };
 
         next();

@@ -17,9 +17,15 @@ export async function entrar(email, senha) {
   return { email: emailConfirmado };
 }
 
-export function sair() {
-  api.definirToken(null);
-  window.dispatchEvent(new Event(EVENTO_SESSAO));
+export async function sair() {
+  try {
+    await api.sair();
+  } catch {
+    // Mesmo se o backend falhar/já estiver expirado, limpamos a sessão local.
+  } finally {
+    api.definirToken(null);
+    window.dispatchEvent(new Event(EVENTO_SESSAO));
+  }
 }
 
 /** Sessão atual do navegador (null enquanto carrega ou sem login). */
