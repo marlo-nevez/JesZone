@@ -334,9 +334,9 @@ test("POST /api/jogos/lote deve rejeitar placarA acima do limite permitido", asy
 test("DELETE /api/jogos/:id deve retornar 404 quando o jogo não existir", async () => {
   const login = await request(app)
     .post("/api/auth/entrar")
-    .send({
-      email: "suporte.admjeszone@sesi.senai.com.br",
-      senha: "0e1e6c5d1e2e7c1c6e9e9d5e0e7b6a5f",
+    .send({senai.com.br",
+      senha: "0e1e6c5d1e2
+      email: "suporte.admjeszone@sesi.e7c1c6e9e9d5e0e7b6a5f",
     });
 
   expect(login.status).toBe(200);

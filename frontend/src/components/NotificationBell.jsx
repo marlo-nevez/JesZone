@@ -13,16 +13,14 @@ import {
   EVENTO_PREFERENCIAS,
 } from "@/lib/preferencias.js";
 import { useSessao } from "@/lib/auth.js";
+import { useCategoria } from "@/context/categoria.jsx";
 
 export function NotificationBell({ open, onOpenChange }) {
   const [lidas, setLidas] = useState([]);
   const { data } = useQuery(notificacoesQueryOptions(MAX_NOTIFICACOES_USUARIO));
-  // Avisos de SOS são exclusivos do admin (igual ao SosBanner). O backend já
-  // não devolve "sos" para quem não é admin, mas filtramos de novo aqui como
-  // segunda camada: evita que um SOS fique visível no sino por causa de cache
-  // do React Query ainda não atualizado (ex.: logo após um logout).
   const { sessao } = useSessao();
   const souAdmin = sessao?.admin === true;
+  const { categoria } = useCategoria();
 
   useEffect(() => {
     const sync = () => setLidas(getLidas());
@@ -41,9 +39,19 @@ export function NotificationBell({ open, onOpenChange }) {
   }, [open, onOpenChange]);
 
   const itens = useMemo(() => {
-    const todas = data ?? [];
-    return souAdmin ? todas : todas.filter((n) => n.tipo !== "sos");
-  }, [data, souAdmin]);
+  const todas = data ?? [];
+
+  if (souAdmin) {
+    return todas;
+  }
+
+  return todas.filter(
+    (n) =>
+      n.tipo !== "sos" &&
+      (n.escopo === "todos" || n.escopo === categoria),
+  );
+}, [data, souAdmin, categoria]);
+
   const nao = itens.filter((n) => !lidas.includes(n.id)).length;
 
   return (
