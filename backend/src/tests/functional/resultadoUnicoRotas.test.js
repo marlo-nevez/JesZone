@@ -128,8 +128,9 @@ describe("Funcionalidade da API - Resuktados únicos", () => {
         expect(resposta.status).toBe(401)
         expect(resposta.body).toHaveProperty("erro")
     })
-    test("DELETE /api/resultados-unicos deve excluir um resultado existente", async () => {
+    test("DELETE /api/resultadosUnicos deve excluir um resultado existente", async () => {
   const idTurma = `EXC-${Date.now()}`;
+  const modalidadeTeste = `xadrez-exclusao-${Date.now()}`;
 
   await Turma.create({
     id: idTurma,
@@ -139,23 +140,24 @@ describe("Funcionalidade da API - Resuktados únicos", () => {
     categoria: "Medio",
     paisKey: "br",
   });
-  console.log(idTurma)
 
   await ResultadoUnico.create({
-    modalidadeSlug: "xadrez-exclusao",
+    modalidadeSlug: modalidadeTeste,
     categoria: "Medio",
     campeaoTurmaId: idTurma,
     observacoes: "Resultado para teste de exclusão",
   });
 
-  const login = await request(app)
-    .post("/api/auth/entrar")
-    .send({
-      email: "suporte.admjeszone@sesi.senai.com.br",
-      senha: "0e1e6c5d1e2e7c1c6e9e9d5e0e7b6a5f",
-    });
+const login = await request(app)
+  .post("/api/auth/entrar")
+  .send({
+    email: "suporte.admjeszone@sesi.senai.com.br",
+    senha: "0e1e6c5d1e2e7c1c6e9e9d5e0e7b6a5f",
+  });
 
   expect(login.status).toBe(200);
+
+  
 
   const token = login.body.token;
 
@@ -164,18 +166,19 @@ describe("Funcionalidade da API - Resuktados únicos", () => {
       .delete("/api/resultados-unicos")
       .set("Authorization", `Bearer ${token}`)
       .query({
-        modalidadeSlug: "xadrez-exclusao",
+        modalidadeSlug: modalidadeTeste,
         categoria: "Medio",
       });
 
     expect(resposta.status).toBe(200);
+
     expect(resposta.body).toEqual({
       ok: true,
     });
 
     const resultado = await ResultadoUnico.findOne({
       where: {
-        modalidadeSlug: "xadrez-exclusao",
+        modalidadeSlug: modalidadeTeste,
         categoria: "Medio",
       },
     });
@@ -184,7 +187,7 @@ describe("Funcionalidade da API - Resuktados únicos", () => {
   } finally {
     await ResultadoUnico.destroy({
       where: {
-        modalidadeSlug: "xadrez-exclusao",
+        modalidadeSlug: modalidadeTeste,
         categoria: "Medio",
       },
     });
