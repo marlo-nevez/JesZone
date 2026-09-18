@@ -7,9 +7,9 @@ describe("Middleware autenticar", () => {
 
     beforeEach(() => {
         process.env.JWT_SECRET = "segredo-teste";
-    process.env.ADMIN_EMAIL = "admin@jeszone.com";
-    process.env.JWT_ISSUER = "jeszone-api";
-    process.env.JWT_AUDIENCE = "jeszone-admin";
+        process.env.ADMIN_EMAIL = "admin@jeszone.com";
+        process.env.JWT_ISSUER = "jeszone-api";
+        process.env.JWT_AUDIENCE = "jeszone-admin";
     });
 
     it("deve rejeitar JWT válido com e-mail diferente do administrador", () => {
