@@ -50,10 +50,14 @@ function classificacao(jogosGrupos, grupo) {
     a.saldo += j.placarA - j.placarB;
     b.saldo += j.placarB - j.placarA;
 
-    let venceA = j.placarA > j.placarB;
-    if (j.placarA === j.placarB) venceA = j.turmaA < j.turmaB;
-    if (venceA) a.pontos += 3;
-    else b.pontos += 3;
+    if (j.placarA === j.placarB) {
+      a.pontos += 1;
+      b.pontos += 1;
+    } else if (j.placarA > j.placarB) {
+      a.pontos += 3;
+    } else {
+      b.pontos += 3;
+    }
   }
 
   return [...linhas.values()].sort(

@@ -73,7 +73,7 @@ function LiderGeralView() {
         <div className="space-y-2">
           {rk.length === 0 && (
             <p className="text-sm text-muted-foreground">
-              Nenhuma pontuação consolidada nesta categoria ainda.
+              Nenhuma pontuação consolidada ainda.
             </p>
           )}
           {rk.map((r, i) => {

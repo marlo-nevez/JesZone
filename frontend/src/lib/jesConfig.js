@@ -317,9 +317,10 @@ export function classificacao(state, modalidadeSlug, categoria, opts = {}) {
     a.contra += j.placarB;
     b.pro += j.placarB;
     b.contra += j.placarA;
-    let venceA = j.placarA > j.placarB;
-    if (j.placarA === j.placarB) venceA = j.turmaA < j.turmaB;
-    if (venceA) {
+    if (j.placarA === j.placarB) {
+      a.pontos += 1;
+      b.pontos += 1;
+    } else if (j.placarA > j.placarB) {
       a.vitorias++;
       a.pontos += 3;
       b.derrotas++;

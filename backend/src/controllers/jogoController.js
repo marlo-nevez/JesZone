@@ -19,6 +19,27 @@ const PLACAR_WO = {
 export const criarJogosEmLote = assincrono(async (req, res) => {
   const { jogos } = criarJogosEsquema.parse(req.body);
 
+  const chaveConfronto = (j) =>
+    [j.modalidadeSlug, j.categoria, j.fase, j.grupo ?? "", [j.turmaA, j.turmaB].sort().join("::")].join("|");
+
+  const vistos = new Set();
+  for (const j of jogos) {
+    const chave = chaveConfronto(j);
+    if (vistos.has(chave)) {
+      throw new ErroApi(`Confronto duplicado no lote: ${j.turmaA} x ${j.turmaB}.`, 400);
+    }
+    vistos.add(chave);
+  }
+
+  const existentes = await Jogo.findAll({
+    where: { modalidadeSlug: { [Op.in]: jogos.map((j) => j.modalidadeSlug) } },
+  });
+  const chavesExistentes = new Set(existentes.map(chaveConfronto));
+  const conflito = jogos.find((j) => chavesExistentes.has(chaveConfronto(j)));
+  if (conflito) {
+    throw new ErroApi(`Confronto já cadastrado: ${conflito.turmaA} x ${conflito.turmaB}.`, 409);
+  }
+
   const criados = await Jogo.bulkCreate(jogos, { validate: true });
 
   await publicarNotificacao({
@@ -90,16 +111,14 @@ export const atualizarJogo = assincrono(async (req, res) => {
 
   await antes.update(linha);
 
-  // Se o jogo acabou de ser encerrado, verifica se isso conclui a fase atual
-  // (grupos ou uma rodada do mata-mata) e, se sim, gera sozinho a fase seguinte
-  // — até a final.
-  if (patch.status === "encerrado" && statusAnterior !== "encerrado") {
-    try {
-      await avancarFaseSeNecessario(antes.modalidadeSlug, antes.categoria);
-    } catch (erroAvanco) {
-      console.error("Falha ao avançar fase automaticamente do mata-mata:", erroAvanco);
-    }
+  if (linha.status === "encerrado" && statusAnterior !== "encerrado") {
+  try {
+    await avancarFaseSeNecessario(antes.modalidadeSlug, antes.categoria);
+  } catch (erroAvanco) {
+    console.error("Falha ao avançar fase automaticamente do mata-mata:", erroAvanco);
+    return res.json({ ok: true, avisoAvanco: "Fase não avançou automaticamente; verifique manualmente." });
   }
+}
 
   if (notificar) {
     const nomeA = antes.dadosTurmaA?.nome ?? antes.turmaA;

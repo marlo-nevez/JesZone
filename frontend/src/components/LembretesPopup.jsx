@@ -2,9 +2,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { X, Droplets, Sun, Utensils } from "lucide-react";
 
-// A cada 30 minutos um carrossel de lembretes aparece no meio da tela,
-// reaproveitando o mesmo esquema de cores usado no telão (ver `.lembrete-fundo`
-// em global.css, espelhando `.home-background`/`.telao-fullscreen::before`).
+
 const INTERVALO_MS = 20 * 60 * 1000;
 
 const LEMBRETES = [
@@ -34,24 +32,31 @@ const LEMBRETES = [
 export function LembretesPopup() {
   const [aberto, setAberto] = useState(false);
   const [indice, setIndice] = useState(0);
-  const [primeiraVez, setPrimeiraVez] = useState(true);
+  
 
   useEffect(() => {
-    // Se o popup estiver aberto, não faz nada
-    if (aberto) return;
+  if (aberto) return;
 
-    // Se for a primeira vez que o site abriu, espera 1 minuto. 
-    // Nas próximas vezes (após o usuário fechar), espera 15 minutos.
-    const tempoEspera = primeiraVez ? 0.6 * 60 * 1000 : INTERVALO_MS;
+  const AGORA = Date.now();
+  const ULTIMO_LEMBRETE = Number(
+    localStorage.getItem("jeszone_ultimo_lembrete") || 0
+  );
 
-    const id = setTimeout(() => {
-      setIndice(0);
-      setPrimeiraVez(false); // Garante que o próximo timer será de 15 minutos
-      setAberto(true);
-    }, tempoEspera);
+  const primeiraAbertura = ULTIMO_LEMBRETE === 0;
+  const tempoDecorrido = AGORA - ULTIMO_LEMBRETE;
 
-    return () => clearTimeout(id);
-  }, [aberto, primeiraVez]);
+  const tempoEspera = primeiraAbertura
+    ? 0.6 * 60 * 1000
+    : Math.max(0, INTERVALO_MS - tempoDecorrido);
+
+  const id = setTimeout(() => {
+    localStorage.setItem("jeszone_ultimo_lembrete", String(Date.now()));
+    setIndice(0);
+    setAberto(true);
+  }, tempoEspera);
+
+  return () => clearTimeout(id);
+}, [aberto]);
 
   useEffect(() => {
     if (!aberto) return;
