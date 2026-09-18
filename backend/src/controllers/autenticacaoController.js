@@ -1,3 +1,5 @@
+import { randomUUID } from "crypto";
+import { revogarToken } from "../middlewares/blocklistToken.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt"
 import { loginEsquema } from "../utils/esquemas.js";
@@ -19,10 +21,12 @@ export const entrar = assincrono(async (req, res) => {
   }
 
   limparTentativasLogin(req);
-
+ 
+ const jti = randomUUID();
  const token = jwt.sign(
     {
-        email: process.env.ADMIN_EMAIL
+        email: process.env.ADMIN_EMAIL,
+        jti
     },
     process.env.JWT_SECRET,
     {
@@ -40,4 +44,9 @@ export const verificar = assincrono(async (req, res) => {
   res.json({ admin: true, email: req.admin.email });
 });
 
-export default { entrar, verificar };
+export const sair = assincrono(async (req, res) => {
+  revogarToken(req.admin.jti);
+  res.status(204).end();
+});
+
+export default { entrar, verificar, sair };

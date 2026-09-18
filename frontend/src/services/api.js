@@ -68,6 +68,10 @@ export function verificarAcesso() {
   return get("/auth/verificar");
 }
 
+export function sair() {
+  return post("/auth/sair");
+}
+
 // ===== Estado público (turmas, jogos, séries, regulamento, resultados) =====
 export function buscarEstado() {
   return get("/estado");
@@ -134,6 +138,7 @@ export default {
   definirToken,
   entrar,
   verificarAcesso,
+  sair,
   buscarEstado,
   buscarNotificacoes,
   publicarAviso,
