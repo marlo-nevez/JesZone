@@ -373,30 +373,91 @@ export function liderGeral(state, categoria) {
   const totals = new Map();
   const cats = categoria ? [categoria] : CATEGORIAS;
   const pts = [100, 70, 50];
+
+  const adicionarPontos = (id, pontos) => {
+    if (!id) return;
+
+    for (const turmaId of resolverMembros(state, id)) {
+      totals.set(
+        turmaId,
+        (totals.get(turmaId) ?? 0) + pontos,
+      );
+    }
+  };
+
+  const vencedorMataMata = (jogo) => {
+    if (!jogo || jogo.status !== "encerrado") return null;
+
+    if (jogo.wo) {
+      return jogo.wo === "A" ? jogo.turmaA : jogo.turmaB;
+    }
+
+    // Mantém a mesma regra usada pelo chaveamento:
+    // empate sem vencedor definido não atribui colocação.
+    if (jogo.placarA === jogo.placarB) return null;
+
+    return jogo.placarA > jogo.placarB
+      ? jogo.turmaA
+      : jogo.turmaB;
+  };
+
   for (const m of MODALIDADES) {
     for (const c of cats) {
+      // Modalidades de resultado único continuam usando
+      // resultadoUnico(), sem qualquer alteração.
       if (m.formato === "unico") {
         const r = resultadoUnico(state, m.slug, c);
         if (!r) continue;
+
         [r.campeaoTurmaId, r.viceTurmaId, r.terceiroTurmaId].forEach(
-          (id, i) => {
-            if (!id) return;
-            for (const turmaId of resolverMembros(state, id)) {
-              totals.set(turmaId, (totals.get(turmaId) ?? 0) + pts[i]);
-            }
-          },
+          (id, i) => adicionarPontos(id, pts[i]),
         );
+
         continue;
       }
-      classificacao(state, m.slug, c)
-        .slice(0, 3)
-        .forEach((r, i) => {
-          for (const turmaId of resolverMembros(state, r.turmaId)) {
-            totals.set(turmaId, (totals.get(turmaId) ?? 0) + pts[i]);
-          }
-        });
+
+      // 1º e 2º lugar: definidos exclusivamente pela FINAL.
+      const final = state.jogos.find(
+        (j) =>
+          j.modalidadeSlug === m.slug &&
+          j.categoria === c &&
+          j.fase === "final" &&
+          j.status === "encerrado",
+      );
+
+      if (final) {
+        const campeao = vencedorMataMata(final);
+
+        if (campeao) {
+          const vice =
+            campeao === final.turmaA
+              ? final.turmaB
+              : final.turmaA;
+
+          adicionarPontos(campeao, 100);
+          adicionarPontos(vice, 70);
+        }
+      }
+
+      // 3º lugar: definido exclusivamente pela disputa de terceiro.
+      const terceiro = state.jogos.find(
+        (j) =>
+          j.modalidadeSlug === m.slug &&
+          j.categoria === c &&
+          j.fase === "terceiro" &&
+          j.status === "encerrado",
+      );
+
+      if (terceiro) {
+        const terceiroColocado = vencedorMataMata(terceiro);
+
+        if (terceiroColocado) {
+          adicionarPontos(terceiroColocado, 50);
+        }
+      }
     }
   }
+
   return [...totals.entries()]
     .map(([turmaId, pontos]) => ({ turmaId, pontos }))
     .sort((a, b) => b.pontos - a.pontos);
